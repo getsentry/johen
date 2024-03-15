@@ -1,0 +1,35 @@
+default_install_hook_types: ["pre-commit", "pre-push"]
+
+exclude: >
+    (?x)(
+        LICENSE$
+    )
+
+repos:
+# Many of these hooks are local because people use a variety of IDEs
+# with autoformatters that need to call out to things like `black` directly.
+# pre-commit run is not the same, and something like pre-commit exec does
+# not exist yet.
+-   repo: local
+    hooks:
+  # Configuration for black exists in pyproject.toml,
+  # but we let pre-commit take care of the file filtering.
+    - id: black
+      name: black
+      entry: black
+      language: system
+      types: [python]
+      require_serial: true
+    # Configuration for isort exists in pyproject.toml,
+    # but we let pre-commit take care of the file filtering.
+    - id: isort
+      name: isort
+      entry: isort
+      language: system
+      types: [python]
+    - id: lint-requirements
+      name: lint-requirements
+      entry: python -m tools.lint_requirements
+      language: python
+      files: requirements-.*\.txt$
+      additional_dependencies: [packaging==21.3]
