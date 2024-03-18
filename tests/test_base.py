@@ -297,7 +297,7 @@ def test_dicts_from_typeddicts(
             },
         )
 
-    for instance in generate(d, count=10, generate_defaults="holes"):
+    for instance in generate(d, count=10, generate_defaults="holes", seed=100):
         assert isinstance(instance, dict)
         for k, annotation in annotations.items():
             assert sometimes(k not in instance)
@@ -356,3 +356,15 @@ def test_recursive_types(json: JsonValue):
     assert sometimes(isinstance(json, int))
     assert sometimes(isinstance(json, str))
     assert sometimes(isinstance(json, float))
+
+
+@parametrize
+def test_stable(val: int):
+    assert sometimes(val == 159)
+    assert sometimes(val == 8434874723534533456)
+    assert sometimes(val == 0)
+    assert sometimes(val == -23823)
+    assert sometimes(val == 122)
+    assert sometimes(val == 24586)
+    assert sometimes(val == 4)
+    assert sometimes(val == 10478)
