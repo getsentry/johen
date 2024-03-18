@@ -20,6 +20,7 @@ setup(
         "Topic :: Software Development :: Testing",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.10",
         "Topic :: Software Development",
     ],
     entry_points={"pytest11": ["johen = johen.pytest"]},
