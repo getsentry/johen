@@ -21,7 +21,6 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3.11",
         "Topic :: Software Development",
-        "License :: FSL",
     ],
     entry_points={"pytest11": ["johen = johen.pytest"]},
 )
