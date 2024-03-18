@@ -5,7 +5,7 @@ on:
 
 
 jobs:
-  build_sentry_data_schemas:
+  build_release:
     name: Build johen Package
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -14,7 +14,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
-          python-version: 3.11
+          python-version:
+          - 3.11
+          - 3.10
       - name: Build Packages
         run: |
           pip install wheel setuptools

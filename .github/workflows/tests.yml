@@ -1,0 +1,32 @@
+on:
+  push:
+
+jobs:
+  test:
+    name: Runs package test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ "3.10", "3.11" ]
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        name: Set up Python ${{ matrix.python-version }}
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install test requirements
+        run: |
+          pip install -r test-requirements.txt
+      - name: Install package
+        run: |
+          python -m ensurepip --upgrade
+          pip install wheel setuptools
+          pip install -e .
+      - name: Run mypy
+        run: |
+          mypy
+      - name: Run pytest
+        run: |
+          pytest

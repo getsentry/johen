@@ -27,10 +27,9 @@ class _RandomGenerator:
         -1
     )  # Reset this before generating each parameter at the top of a process.
 
-    def restart_at(self, seed: int) -> typing.Self:
+    def restart_at(self, seed: int):
         self.last_seed = seed
         self.r = random.Random(seed)
-        return self
 
     def wrap_deterministically(
         self, iter: Iterator[_A], seed: int, max_iterations: int
@@ -49,7 +48,7 @@ class _RandomGenerator:
 
         return wrapped()
 
-    def restart_at_next_seed(self) -> typing.Self:
+    def restart_at_next_seed(self):
         self.restart_at(self.last_seed)
         next_seed = self.r.getrandbits(64)
         self.restart_at(next_seed)
