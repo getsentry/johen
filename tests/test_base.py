@@ -1,6 +1,7 @@
 import dataclasses
 import enum
 import random
+import sys
 import typing
 from random import Random
 
@@ -265,11 +266,11 @@ def test_dicts_from_typeddicts(
     annotations: typing.Mapping[SimpleSymbol, typing.Annotated[typing.Any, Examples((int, str))]],
     r: Random,
 ):
-    total = bool(random.randint(0, 1))
+    total = bool(r.randint(0, 1))
     a = r.randint(0, len(annotations)) if not total else len(annotations)
     not_required = list(annotations.keys())[a:]
 
-    use_typing_extensions = random.random() < 0.5
+    use_typing_extensions = r.random() < 0.5
     assert sometimes(use_typing_extensions)
 
     if use_typing_extensions:
@@ -297,6 +298,7 @@ def test_dicts_from_typeddicts(
             },
         )
 
+    assert sometimes(use_typing_extensions)
     for instance in generate(d, count=10, generate_defaults="holes", seed=100):
         assert isinstance(instance, dict)
         for k, annotation in annotations.items():
