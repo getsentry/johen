@@ -2,7 +2,7 @@
 Generative (property) testing, from python annotations.
 
 Inspired by QuickCheck, similar goals to [hypothesis](https://hypothesis.readthedocs.io/en/latest/), but focused on
-annotations doing the work.
+annotations doing the heavy lifting.
 
 ## Quick Usage
 
@@ -21,13 +21,13 @@ def test_thing(my_model: Model, inputs: list[str]):
 Works on many common types of datatypes:
 * Named tuples
 * dataclasses
-* pydantic models (opt in)
+* pydantic v2 models (opt in)
 * sqlalchemy models (opt in)
 * tuples, lists, sets
 * TypedDict
 * primitives
 * UUIDs
-* more, plus trivial to plug into
+* easy to extend to support more types
 
 ## Configuration
 
@@ -66,3 +66,18 @@ global_config["type_matchers"][MyType] = (MyType(r.randint(0, 10)) for r in gen)
 ```
 
 The other is to add a custom `AnnotationMatcher` to the `"matchers"` key.  See generates/base.py for examples.
+
+## Recursive Types
+
+It is possible to support recursive types through forward references, but do note that
+their generation is typically expensive.  Use the `"globals"` key of the `global_config`
+to configure the forward refs ahead of time:
+
+```python
+from johen.specialized import JsonDict, JsonValue
+
+global_config['globals'].extend({
+  "JsonDict": JsonDict,
+  "JsonValue": JsonValue,
+})
+```
