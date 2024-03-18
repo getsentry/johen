@@ -12,7 +12,6 @@ from johen.exc import GenerationError
 from johen.generators.annotations import AnnotationProcessingContext
 from johen.generators.base import generate_dicts_for_annotations
 from johen.globals import global_config
-from johen.named_bool import NamedBool
 from johen.random import gen
 
 _C = typing.TypeVar("_C", bound=typing.Callable)
@@ -80,6 +79,7 @@ class _parametrize:
             context = AnnotationProcessingContext.from_source(test)
             context.generate_defaults = final_config["generate_defaults"]
             context.matchers = compile_matchers(final_config)
+            context.globals = final_config["globals"]
             return gen.wrap_deterministically(
                 generate_dicts_for_annotations(
                     {
@@ -100,15 +100,14 @@ class _parametrize:
             def _get_arg_thunk(index: int):
                 def _thunk():
                     call_args = get_call_args()
-                    if not cached:
-                        while len(cached) < count:
-                            try:
-                                cached.append(next(call_args))
-                                seeds.append(gen.last_seed)
-                            except StopIteration:
-                                raise GenerationError(
-                                    f"Failed to generate {count} test cases for {test.__name__}, check that constraint is not too strong."
-                                )
+                    while len(cached) < count:
+                        try:
+                            cached.append(next(call_args))
+                            seeds.append(gen.last_seed)
+                        except StopIteration as e:
+                            raise GenerationError(
+                                f"Failed to generate {count} test cases for {test.__name__}, check that constraint is not too strong."
+                            ) from e
                     gen.restart_at(seeds[index])
                     return cached[index][arg]
 
@@ -171,9 +170,14 @@ def pytest_runtest_setup(item: pytest.Item):
 
     injected: list[str] = mark.args[1]
 
-    for k in injected:
-        # apply the thunk.
-        item.callspec.params[k] = item.callspec.params[k]()  # type: ignore
+    if hasattr(item, "callspec"):
+        for k in injected:
+            # apply the thunk.
+            item.callspec.params[k] = item.callspec.params[k]()  # type: ignore
+    else:
+        raise GenerationError(
+            f"Test {item.name!r} does not support parametrization, you may need to use a plain test function."
+        )
 
     yield
 

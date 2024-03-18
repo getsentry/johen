@@ -49,6 +49,7 @@ class ParametrizeConfig(TypedDict, total=False):
     max_iterations: int
     type_matchers: dict[Any, Iterator]
     matchers: list[AnnotationMatcher]
+    globals: dict[str, Any]
 
 
 def pick_seed_from_name(name: str) -> int:
@@ -91,6 +92,7 @@ def get_base_config() -> ParametrizeConfig:
             base.generate_lists_sets_frozen_sets,
             base.generate_named_tuples,
             base.generate_dataclass_instances,
+            base.generate_forward_refs,
             base.generate_literals,
             base.generate_dicts,
             base.generate_unions,
@@ -99,6 +101,7 @@ def get_base_config() -> ParametrizeConfig:
             base.generate_tuples,
             base.generate_unexpected_annotation,
         ],
+        "globals": {},
     }
 
 
@@ -118,10 +121,5 @@ def updated_config(left: ParametrizeConfig, right: ParametrizeConfig) -> Paramet
         ),
         "type_matchers": {**left.get("type_matchers", {}), **right.get("type_matchers", {})},
         "matchers": [*right.get("matchers", []), *left.get("matchers", [])],
+        "globals": {**left.get("globals", {}), **right.get("globals", {})},
     }
-
-
-def test_updated_config():
-    from johen.globals import generate
-
-    # for left, right in zip(generate()

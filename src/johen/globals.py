@@ -17,6 +17,7 @@ def generate(
     matchers: list[AnnotationMatcher] | None = None,
     seed: int | None = None,
     count: int | None = None,
+    globals: dict[str, Any] | None = None,
 ) -> Iterator[_A]:
     ...
 
@@ -28,6 +29,7 @@ def generate(
     matchers: list[AnnotationMatcher] | None = None,
     seed: int | None = None,
     count: int | None = None,
+    globals: dict[str, Any] | None = None,
 ) -> Iterator[_A]:
     ...
 
@@ -39,6 +41,7 @@ def generate(
     matchers: list[AnnotationMatcher] | None = None,
     seed: int | None = None,
     count: int | None = None,
+    globals: dict[str, Any] | None = None,
 ) -> Iterator:
     ...
 
@@ -49,6 +52,7 @@ def generate(
     matchers: list[AnnotationMatcher] | None = None,
     seed: int | None = None,
     count: int | None = None,
+    globals: dict[str, Any] | None = None,
 ) -> Iterator:
     context = AnnotationProcessingContext.from_source(obj)
 
@@ -61,6 +65,11 @@ def generate(
         context.matchers = [*matchers, *compile_matchers(global_config)]
     else:
         context.matchers = compile_matchers(global_config)
+
+    if globals is not None:
+        context.globals = {**global_config["globals"], **globals}
+    else:
+        context.globals = global_config["globals"]
 
     if seed is not None:
         gen.restart_at(seed=seed)
