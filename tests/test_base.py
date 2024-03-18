@@ -18,7 +18,7 @@ from johen.generators.base import (
     generate_dicts_for_annotations,
     generate_tuples,
 )
-from johen.generators.specialized import SimpleSymbol, ints
+from johen.generators.specialized import JsonDict, JsonValue, SimpleSymbol, ints
 from johen.pytest import parametrize, sometimes
 
 
@@ -343,3 +343,16 @@ def test_generate_tuples(r: Random):
             assert len(v) == num_ints + num_strs
         else:
             assert sometimes(any(a != b for a, b in zip(v, v[1:])))
+
+
+@parametrize(globals={"JsonValue": JsonValue, "JsonDict": JsonDict}, count=30)
+def test_recursive_types(json: JsonValue):
+    assert sometimes(isinstance(json, dict))
+    if isinstance(json, dict):
+        for k, v in json.items():
+            assert sometimes(isinstance(v, dict))
+            assert sometimes(isinstance(v, list))
+    assert sometimes(isinstance(json, list))
+    assert sometimes(isinstance(json, int))
+    assert sometimes(isinstance(json, str))
+    assert sometimes(isinstance(json, float))

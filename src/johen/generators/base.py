@@ -7,6 +7,7 @@ import typing
 from typing import Any, Iterator, get_type_hints
 
 from johen.examples import Examples
+from johen.exc import GenerationError
 from johen.generators.annotations import AnnotationProcessingContext
 from johen.generators.specialized import SimpleSymbol, ints
 from johen.random import gen
@@ -202,7 +203,7 @@ def generate_dicts(context: AnnotationProcessingContext) -> Iterator[dict[Any, A
         value_generator = context.step(value, "[Value]")
         return context.wrap_with_debug_context(
             dict((k, v) for k, v, _ in zip(key_generator, value_generator, range(length)))
-            for length in (r.randint(0, 10) for r in gen)
+            for length in (r.randint(0, 5 - context.recursive_depth) for r in gen)
         )
 
     return None
@@ -267,7 +268,10 @@ def generate_lists_sets_frozen_sets(context: AnnotationProcessingContext) -> Ite
             arg = next(iter(context.args), Any)
             generator = context.step(arg)
             return (
-                constructor([i for i, _ in zip(generator, range(r.randint(0, 10)))]) for r in gen
+                constructor(
+                    [i for i, _ in zip(generator, range(r.randint(0, 5 - context.recursive_depth)))]
+                )
+                for r in gen
             )
     return None
 
@@ -297,3 +301,26 @@ def _dataclass_has_default(field: dataclasses.Field) -> bool:
     return (
         field.default is not dataclasses.MISSING or field.default_factory is not dataclasses.MISSING
     )
+
+
+def generate_forward_refs(context: AnnotationProcessingContext) -> typing.Iterator | None:
+    match = isinstance(context.source, typing.ForwardRef)
+    if not match:
+        try:
+            import typing_extensions
+
+            match = isinstance(context.source, typing_extensions.ForwardRef)
+        except ImportError:
+            pass
+    if match:
+        ref = typing.cast(typing.ForwardRef, context.source)
+        if ref.__forward_arg__ not in context.globals:
+            raise GenerationError(f"Could not resolve forward ref {ref.__forward_arg__}")
+
+        def generate_for_forward_ref():
+            t = ref._evaluate(context.globals, locals(), frozenset())
+            for i in context.step(t, ref.__forward_arg__, recursive=True):
+                yield i
+
+        return generate_for_forward_ref()
+    return None

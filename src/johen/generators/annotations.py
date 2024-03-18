@@ -22,6 +22,8 @@ class AnnotationProcessingContext:
     path: tuple[str, ...] = dataclasses.field(default_factory=tuple)
     generate_defaults: bool | typing.Literal["holes"] = False
     matchers: list[AnnotationMatcher] = dataclasses.field(default_factory=list)
+    globals: dict[str, Any] = dataclasses.field(default_factory=dict)
+    recursive_depth: int = 0
 
     def concretely_implements(self, other: Any) -> bool:
         for origin in (self.origin, self.source):
@@ -53,7 +55,11 @@ class AnnotationProcessingContext:
         return False
 
     def step(
-        self, source: Any, step: str | None = None, args: tuple[Any, ...] | None = None
+        self,
+        source: Any,
+        step: str | None = None,
+        args: tuple[Any, ...] | None = None,
+        recursive=False,
     ) -> Iterator:
         next_context = AnnotationProcessingContext.from_source(source)
         if args is not None:
@@ -62,17 +68,11 @@ class AnnotationProcessingContext:
         next_context.path = (*self.path, step) if step else self.path
         next_context.generate_defaults = self.generate_defaults
         next_context.matchers = self.matchers
-        return next_context.generate()
+        next_context.globals = self.globals
+        if recursive:
+            next_context.recursive_depth = self.recursive_depth + 1
 
-    def wrap_and_validate(self, i: Iterator, matcher: AnnotationMatcher) -> Iterator:
-        try:
-            gen.remaining_iterations = 10000
-            next(i)
-        except StopIteration:
-            raise GenerationError(
-                f"Bad generator detected for {' '.join(self.path)} {self.source} {matcher}"
-            )
-        return i
+        return next_context.generate()
 
     @classmethod
     def from_source(cls, source: Any) -> "AnnotationProcessingContext":
@@ -89,5 +89,5 @@ class AnnotationProcessingContext:
         for matcher in self.matchers:
             result = matcher(self)
             if result is not None:
-                return self.wrap_and_validate(result, matcher)
+                return result
         raise GenerationError(f"Could not generate for {' '.join(self.path)} {self.source}")
