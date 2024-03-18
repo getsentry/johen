@@ -22,6 +22,7 @@ jobs:
       - name: Install package
         run: |
           pip install wheel setuptools
+          pip install --upgrade setuptools
           pip install -e .
       - name: Run mypy
         run: |
