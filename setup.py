@@ -8,7 +8,7 @@ def get_requirements(file: str):
 
 setup(
     name="johen",
-    version="0.1.1",
+    version="0.1.2",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
     install_requires=[],
