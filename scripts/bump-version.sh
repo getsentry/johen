@@ -7,6 +7,6 @@ cd "$SCRIPT_DIR/.."
 OLD_VERSION="$1"
 NEW_VERSION="$2"
 
-sed -i -e 's/^version=.*$/version='"$NEW_VERSION/" setup.py
+sed -i -e 's/version=.*,$/version='"$NEW_VERSION/" setup.py
 
 echo "New version: $NEW_VERSION"
