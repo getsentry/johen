@@ -1,6 +1,7 @@
 import dataclasses
 import enum
 import random
+import sys
 import typing
 from random import Random
 
@@ -265,11 +266,11 @@ def test_dicts_from_typeddicts(
     annotations: typing.Mapping[SimpleSymbol, typing.Annotated[typing.Any, Examples((int, str))]],
     r: Random,
 ):
-    total = bool(random.randint(0, 1))
+    total = bool(r.randint(0, 1))
     a = r.randint(0, len(annotations)) if not total else len(annotations)
     not_required = list(annotations.keys())[a:]
 
-    use_typing_extensions = random.random() < 0.5
+    use_typing_extensions = r.random() < 0.5
     assert sometimes(use_typing_extensions)
 
     if use_typing_extensions:
@@ -297,7 +298,8 @@ def test_dicts_from_typeddicts(
             },
         )
 
-    for instance in generate(d, count=10, generate_defaults="holes"):
+    assert sometimes(use_typing_extensions)
+    for instance in generate(d, count=10, generate_defaults="holes", seed=100):
         assert isinstance(instance, dict)
         for k, annotation in annotations.items():
             assert sometimes(k not in instance)
@@ -356,3 +358,15 @@ def test_recursive_types(json: JsonValue):
     assert sometimes(isinstance(json, int))
     assert sometimes(isinstance(json, str))
     assert sometimes(isinstance(json, float))
+
+
+@parametrize
+def test_stable(val: int):
+    assert sometimes(val == 159)
+    assert sometimes(val == 8434874723534533456)
+    assert sometimes(val == 0)
+    assert sometimes(val == -23823)
+    assert sometimes(val == 122)
+    assert sometimes(val == 24586)
+    assert sometimes(val == 4)
+    assert sometimes(val == 10478)
