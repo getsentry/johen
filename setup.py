@@ -8,8 +8,9 @@ def get_requirements(file: str):
 
 setup(
     name="johen",
-    version="0.1.3",
+    version=open("version").read().strip(),
     package_dir={"": "src"},
+    package_data={"johen": ["py.typed"]},
     packages=find_packages(where="src"),
     install_requires=[],
     setup_requires=[],
