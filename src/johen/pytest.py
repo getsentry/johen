@@ -94,7 +94,6 @@ class _parametrize:
             )
 
         cached: list[dict[str, Any]] = []
-        seeds: list[int] = []
 
         def _get_arg_slice(arg: str) -> typing.Callable[[int], typing.Callable[[], Any]]:
             def _get_arg_thunk(index: int):
@@ -103,12 +102,10 @@ class _parametrize:
                     while len(cached) < count:
                         try:
                             cached.append(next(call_args))
-                            seeds.append(gen.last_seed)
                         except StopIteration as e:
                             raise GenerationError(
                                 f"Failed to generate {count} test cases for {test.__name__}, check that constraint is not too strong."
                             ) from e
-                    gen.restart_at(seeds[index])
                     return cached[index][arg]
 
                 _thunk.__name__ = f"{arg}-{index}"
@@ -165,6 +162,8 @@ def pytest_runtest_setup(item: pytest.Item):
 
     mark = item.get_closest_marker("johen")
     if mark is None:
+        # In this case, at the very least, reset the seed deterministically for raw `generate` calls.
+        gen.restart_at(pick_seed_from_name(item.name))
         yield
         return
 
@@ -176,7 +175,7 @@ def pytest_runtest_setup(item: pytest.Item):
             item.callspec.params[k] = item.callspec.params[k]()  # type: ignore
     else:
         raise GenerationError(
-            f"Test {item.name!r} does not support parametrization, you may need to use a plain test function."
+            f"Test {item.name!r} does not support parametrization, you will need to invoke `generate` directly."
         )
 
     yield
